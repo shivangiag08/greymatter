@@ -1,6 +1,8 @@
 import torch
 import torch.nn as nn
 from torchvision import models
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 class ResNetFeatureExtractor(nn.Module):
     def __init__(self, pretrained=True):
@@ -49,3 +51,45 @@ class LSTMAttentionClassifier(nn.Module):
         context = torch.bmm(attn_weights.unsqueeze(1), lstm_out).squeeze(1)  # [batch, hidden_size*2]
         out = self.fc(context)  # [batch, num_classes]
         return out
+    
+from torch.nn.utils.rnn import pad_sequence
+
+def collate_fn(batch):
+    # batch: list of tuples (sequence, mask, label)
+    sequences = [torch.tensor(item['features']) for item in batch]
+    labels = torch.tensor([item['label'] for item in batch])
+    masks = [torch.tensor(item['mask']) for item in batch]
+    
+    # Pad sequences
+    padded_sequences = pad_sequence(sequences, batch_first=True, padding_value=0)
+    padded_masks = pad_sequence(masks, batch_first=True, padding_value=0)
+    
+    return padded_sequences, padded_masks, labels
+
+from torch.utils.data import DataLoader
+
+dataset = "./text_data/. "#YourCustomDataset
+dataloader = DataLoader(
+    dataset,
+    batch_size=1,  # Start with 1 as per your setup
+    shuffle=True,
+    collate_fn=collate_fn
+)
+
+# Example using Grad-CAM
+from pytorch_grad_cam import GradCAM
+from pytorch_grad_cam.utils.image import show_cam_on_image
+
+def generate_grad_cam(model, image, target_layer):
+    cam = GradCAM(model=model, target_layers=[target_layer], use_cuda=True)
+    grayscale_cam = cam(input_tensor=image, targets=None)
+    visualization = show_cam_on_image(image.cpu().numpy()[0], grayscale_cam[0], use_rgb=True)
+    plt.imshow(visualization)
+    plt.show()
+
+def plot_attention_weights(attention_weights):
+    plt.figure(figsize=(10, 6))
+    sns.heatmap(attention_weights.detach().cpu().numpy(), annot=True, fmt=".2f")
+    plt.xlabel('Visits')
+    plt.ylabel('Batch')
+    plt.show()
