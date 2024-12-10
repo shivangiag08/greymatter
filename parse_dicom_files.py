@@ -4,8 +4,8 @@ from datetime import datetime
 import pandas as pd
 
 
-base_dir = "D:\DL_DATASET\Cohort_4_MRI_1\ADNI"  # Adjust this to your actual directory
-output_path = r"C:\Shivangi\college\Sem 5\Deep Learning\DL project\zip1_metadata_from_dcm.csv"
+base_dir = "/Users/nimratkk/Documents/Projects/XAIforAD/ADNI"  # Adjust this to your actual directory
+output_path = r"/Users/nimratkk/Documents/Projects/XAIforAD/zip10_metadata_from_dcm.csv"
 
 
 def parse_dicom_filename(file_name):

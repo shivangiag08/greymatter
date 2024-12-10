@@ -1,7 +1,7 @@
 import pydicom
 import cv2
 import numpy as np
-import pandas as pd
+import pandas as pdff
 from tqdm import tqdm
 import os
 import h5py
@@ -16,9 +16,9 @@ import h5py
 '''
 
 # File paths
-metadata_path = r'C:\Shivangi\college\Sem 5\Deep Learning\DL project\zip1_metadata_from_dcm.csv'
-hdf5_output_path = r'D:/DL_DATASET/processed_images_zip1.h5'  # Using .h5 for HDF5 format
-fail_path = r'C:\Shivangi\college\Sem 5\Deep Learning\DL project\failed_files.csv'
+metadata_path = r"/Users/nimratkk/Documents/Projects/XAIforAD/zip10_metadata_from_dcm.csv"
+hdf5_output_path = r"/Users/nimratkk/Documents/Projects/XAIforAD/processed_images_zip10.h5"  # Using .h5 for HDF5 format
+fail_path = r"/Users/nimratkk/Documents/Projects/XAIforAD/failed_files.csv"
 
 # Batch size
 BATCH_SIZE = 1000
