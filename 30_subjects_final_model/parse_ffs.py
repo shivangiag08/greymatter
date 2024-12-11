@@ -12,12 +12,6 @@ from tqdm import tqdm
 ###############################################################################
 '''
 
-# Base directory containing DICOM files
-base_dir = "/Users/nimratkk/Documents/Projects/XAIforAD/MRI_5"  # Adjust this to your actual directory
-
-# Output metadata CSV path
-output_path = "/Users/nimratkk/Documents/Projects/XAIforAD/30_patients_zip5.csv"
-
 # List of specific patient IDs to include
 selected_patient_ids = [
     "098_S_4018", "098_S_4017", "116_S_1271", "031_S_0294", "031_S_4021", 
@@ -26,7 +20,7 @@ selected_patient_ids = [
     "022_S_6069", "041_S_4060", "041_S_4138", "041_S_4143", "041_S_4874",
     "011_S_0002", "011_S_0003", "011_S_0005", "011_S_0008", "022_S_0007", 
     "100_S_0015", "023_S_0030", "023_S_0031", "011_S_0016", "073_S_4393",
-    '941_S_6499' '016_S_6931' '018_S_2155' '082_S_1119' '027_S_0835','116_S_1243'
+    "941_S_6499", "016_S_6931", "018_S_2155", "082_S_1119", "027_S_0835", "116_S_1243"
 ]
 
 # ############################### Functions ########################################
@@ -168,7 +162,9 @@ def process_folders(base_dir, selected_patient_ids):
 
 if __name__ == "__main__":
     # Process the directories and get the DataFrame
-    df = process_folders(base_dir, selected_patient_ids)
-
-    # Display the first few rows
-    print(df.head())
+    # Base directory containing DICOM files
+    for n in range(1, 10):
+        base_dir = f"/Users/nimratkk/Documents/Projects/XAIforAD/MRI_{n}"
+        output_path = f"/Users/nimratkk/Documents/Projects/XAIforAD/30_patients_zip{n}.csv"
+        df = process_folders(base_dir, selected_patient_ids)
+        print(df.head())

@@ -1,5 +1,5 @@
 # Command to run:
-# python3 resnet_ftw.py --h5_file /path/to/your_file.h5 --csv_file /path/to/your_file.csv
+# python3 resnet_ftw.py --h5_file /Users/nimratkk/Documents/Projects/XAIforAD/processed_images_zip10.h5 --csv_file /Users/nimratkk/Documents/Projects/XAIforAD/zip3_metadata_from_dcm1.csv
 
 import os
 import h5py
@@ -26,7 +26,7 @@ selected_patient_ids = [
     "022_S_6069", "041_S_4060", "041_S_4138", "041_S_4143", "041_S_4874",
     "011_S_0002", "011_S_0003", "011_S_0005", "011_S_0008", "022_S_0007", 
     "100_S_0015", "023_S_0030", "023_S_0031", "011_S_0016", "073_S_4393",
-    '941_S_6499', '016_S_6931', '018_S_2155', '082_S_1119', '027_S_0835','116_S_1243'
+    "941_S_6499", "016_S_6931", "018_S_2155", "082_S_1119", "027_S_0835", "116_S_1243"
 ]
 
 # Define training and testing patient IDs
@@ -34,8 +34,8 @@ train_patient_ids = selected_patient_ids[:30]  # First 30 for training
 test_patient_ids = selected_patient_ids[30:]   # Last 6 for testing
 
 # Default output paths for feature maps
-DEFAULT_TRAIN_FEATURES_PATH = "/Users/Agaaz/Downloads/train_features.npy"
-DEFAULT_TEST_FEATURES_PATH = "/Users/Agaaz/Downloads/test_features.npy"
+DEFAULT_TRAIN_FEATURES_PATH = "/Users/nimratkk/Documents/Projects/XAIforAD/train10_features.npy"
+DEFAULT_TEST_FEATURES_PATH = "/Users/nimratkk/Documents/Projects/XAIforAD/test10_features.npy"
 
 # ############################### Functions ########################################
 
