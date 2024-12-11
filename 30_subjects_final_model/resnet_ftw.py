@@ -1,4 +1,5 @@
-# command to run: python3 resnet_ftw.py --h5_file /path/to/your_file.h5 --csv_file /path/to/your_file.csv
+# Command to run:
+# python3 resnet_ftw.py --h5_file /path/to/your_file.h5 --csv_file /path/to/your_file.csv
 
 import os
 import h5py
@@ -25,7 +26,7 @@ selected_patient_ids = [
     "022_S_6069", "041_S_4060", "041_S_4138", "041_S_4143", "041_S_4874",
     "011_S_0002", "011_S_0003", "011_S_0005", "011_S_0008", "022_S_0007", 
     "100_S_0015", "023_S_0030", "023_S_0031", "011_S_0016", "073_S_4393",
-    '941_S_6499' '016_S_6931' '018_S_2155' '082_S_1119' '027_S_0835','116_S_1243'
+    '941_S_6499', '016_S_6931', '018_S_2155', '082_S_1119', '027_S_0835','116_S_1243'
 ]
 
 # Define training and testing patient IDs
@@ -171,9 +172,12 @@ def main():
         return
     
     # Determine the device to run on
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(f"Using device: {device}")
-
+    if torch.backends.mps.is_available():
+        device = torch.device("mps")
+        print("MPS device detected and set as the computation device.")
+    else:
+        raise RuntimeError("MPS device not available. Please ensure you're running on a Mac with Apple Silicon and PyTorch is installed with MPS support.")
+    
     # Load ResNet50 model
     model = load_resnet50(device)
     print("ResNet50 model loaded.")
@@ -203,14 +207,14 @@ def main():
         try:
             img_tensor = preprocess_image(img)
         except Exception as e:
-            print(f"Preprocessing failed for {h5_path}, slice {slice_number}: {e}")
+            print(f"Preprocessing failed for {os.path.basename(h5_path)}, slice {slice_number}: {e}")
             continue  # Skip this image
         
         # Extract features
         try:
             features = extract_features(model, img_tensor, device)
         except Exception as e:
-            print(f"Feature extraction failed for {h5_path}, slice {slice_number}: {e}")
+            print(f"Feature extraction failed for {os.path.basename(h5_path)}, slice {slice_number}: {e}")
             continue  # Skip this image
         
         # Assign to train or test based on patient_id
