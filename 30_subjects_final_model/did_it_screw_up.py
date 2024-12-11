@@ -17,7 +17,7 @@ print(f"Total metadata entries: {total_metadata_entries}")
 print(f"Total images in H5 file: {total_h5_images}")
 
 if total_metadata_entries == total_h5_images:
-    print("SUCCESS: The H5 file and metadata are perfectly aligned.")
+    print("SUCCESS: The H5 file and metadata are perfectly aligned. \n IT DID NOT SCREW UP!!!!!")
 else:
-    print("ERROR: Mismatch detected between H5 file and metadata.")
+    print("ERROR: Mismatch detected between H5 file and metadata. \n Slight oopsie :(")
     print(f"Difference: {abs(total_h5_images - total_metadata_entries)} images")
