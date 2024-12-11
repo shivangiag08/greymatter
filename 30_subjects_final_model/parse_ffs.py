@@ -25,9 +25,10 @@ selected_patient_ids = [
     "024_S_4084", "067_S_4782", "011_S_4827", "014_S_2185", "014_S_4401", 
     "022_S_6069", "041_S_4060", "041_S_4138", "041_S_4143", "041_S_4874",
     "011_S_0002", "011_S_0003", "011_S_0005", "011_S_0008", "022_S_0007", 
-    "100_S_0015", "023_S_0030", "023_S_0031", "011_S_0016", "011_S_0021"
+    "100_S_0015", "023_S_0030", "023_S_0031", "011_S_0016", "073_S_4393"
 ]
 
+selected_patient_ids = ["098_S_4003"]
 # ############################### Functions ########################################
 
 def parse_dicom_filename(file_name):
@@ -101,7 +102,18 @@ def process_folders(base_dir, selected_patient_ids):
                     if parsed_data and parsed_data['patient_id'] in selected_patient_ids:
                         # Now, read the DICOM file to get the number of frames (slices)
                         try:
-                            dicom_data = pydicom.dcmread(file_path, stop_before_pixels=True)
+                            dicom_data = pydicom.dcmread(file_path)
+                            
+                            # Check if 'PixelData' exists
+                            if 'PixelData' not in dicom_data:
+                                print(f"No PixelData found in DICOM file {file_path}. Skipping.")
+                                continue  # Skip to next file
+                            
+                            # Optionally, check if Modality is image-based
+                            if hasattr(dicom_data, 'Modality') and dicom_data.Modality not in ['MR', 'CT', 'US', 'PT', 'NM']:
+                                print(f"Non-image Modality '{dicom_data.Modality}' in file {file_path}. Skipping.")
+                                continue  # Skip non-image DICOM files
+
                             img = dicom_data.pixel_array
                             if img.ndim == 3:
                                 num_slices = img.shape[0]
@@ -129,7 +141,17 @@ def process_folders(base_dir, selected_patient_ids):
                         else:
                             # If no slices found, skip or handle differently
                             print(f"No slices found in DICOM file {file_path}. Skipping.")
-    
+                            # Optionally, add an entry with slice_number as 0 or None
+                            # entry = {
+                            #     'patient_id': parsed_data['patient_id'],
+                            #     'scan_type': parsed_data['scan_type'],
+                            #     'datetime': parsed_data['datetime'],
+                            #     'filename': parsed_data['filename'],
+                            #     'file_path': file_path,
+                            #     'slice_number': None
+                            # }
+                            # all_data.append(entry)
+
     # Convert the data into a DataFrame
     df = pd.DataFrame(all_data)
 
