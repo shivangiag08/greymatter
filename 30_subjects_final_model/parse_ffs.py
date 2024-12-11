@@ -28,7 +28,6 @@ selected_patient_ids = [
     "100_S_0015", "023_S_0030", "023_S_0031", "011_S_0016", "073_S_4393"
 ]
 
-selected_patient_ids = ["098_S_4003"]
 # ############################### Functions ########################################
 
 def parse_dicom_filename(file_name):
