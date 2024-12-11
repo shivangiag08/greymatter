@@ -15,9 +15,9 @@ import logging
 '''
 
 # File paths
-metadata_path = r"/Users/Agaaz/Downloads/30_patients_zip1.csv"          # Updated metadata path
-hdf5_output_path = r"/Users/Agaaz/Downloads/processed_images_zip10.h5" # Using .h5 for HDF5 format
-fail_path = r"/Users/Agaaz/Downloads/failed_files.csv"
+metadata_path = r"/Users/nimratkk/Documents/Projects/XAIforAD/30_patients_zip5.csv"          # Updated metadata path
+hdf5_output_path = r"/Users/nimratkk/Documents/Projects/XAIforAD/processed_images_zip5.h5" # Using .h5 for HDF5 format
+fail_path = r"//Users/nimratkk/Documents/Projects/XAIforAD/failed_files.csv"
 
 # Batch size
 BATCH_SIZE = 1000

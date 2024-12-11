@@ -13,10 +13,10 @@ from tqdm import tqdm
 '''
 
 # Base directory containing DICOM files
-base_dir = "/Users/Agaaz/Downloads/ADNI_nimrat"  # Adjust this to your actual directory
+base_dir = "/Users/nimratkk/Documents/Projects/XAIforAD/MRI_5"  # Adjust this to your actual directory
 
 # Output metadata CSV path
-output_path = "/Users/Agaaz/Downloads/30_patients_zip1.csv"
+output_path = "/Users/nimratkk/Documents/Projects/XAIforAD/30_patients_zip5.csv"
 
 # List of specific patient IDs to include
 selected_patient_ids = [
