@@ -126,103 +126,107 @@ def load_and_preprocess_dicom(file_path, slice_number, target_size=TARGET_SIZE):
 # ############################### Main Processing ##################################
 
 def main():
-    # Load the metadata
-    metadata_df = pd.read_csv(metadata_path)
-    total_metadata_entries = len(metadata_df)
-    logging.info(f"Total metadata entries to process: {total_metadata_entries}")
+    for n in range(6, 10):
+        metadata_path = f"/Users/nimratkk/Documents/Projects/XAIforAD/30_patients_zip{n}.csv"          # Updated metadata path
+        hdf5_output_path = f"/Users/nimratkk/Documents/Projects/XAIforAD/processed_images_zip{n}.h5" # Using .h5 for HDF5 format
 
-    # Initialize HDF5 file
-    with h5py.File(hdf5_output_path, 'w') as hdf5_file:
-        # Create a dataset with unlimited rows and fixed image shape
-        dset = hdf5_file.create_dataset(
-            'images',
-            shape=(0, TARGET_SIZE[0], TARGET_SIZE[1]),
-            maxshape=(None, TARGET_SIZE[0], TARGET_SIZE[1]),
-            dtype=np.uint8,
-            chunks=True  # Enable chunking for better performance
-        )
+        # Load the metadata
+        metadata_df = pd.read_csv(metadata_path)
+        total_metadata_entries = len(metadata_df)
+        logging.info(f"Total metadata entries to process: {total_metadata_entries}")
 
-        # Initialize list for failed entries
-        failed_entries = []
+        # Initialize HDF5 file
+        with h5py.File(hdf5_output_path, 'w') as hdf5_file:
+            # Create a dataset with unlimited rows and fixed image shape
+            dset = hdf5_file.create_dataset(
+                'images',
+                shape=(0, TARGET_SIZE[0], TARGET_SIZE[1]),
+                maxshape=(None, TARGET_SIZE[0], TARGET_SIZE[1]),
+                dtype=np.uint8,
+                chunks=True  # Enable chunking for better performance
+            )
 
-        # Initialize buffer for batch processing
-        buffer = []
+            # Initialize list for failed entries
+            failed_entries = []
 
-        # Initialize counters
-        processed_entries = 0
-        total_images_added = 0
-        total_placeholders = 0
-
-        # Process each metadata entry
-        for idx, row in tqdm(metadata_df.iterrows(), total=metadata_df.shape[0], desc="Processing metadata entries"):
-            file_path = row['file_path']
-            slice_number = row['slice_number']
-
-            # Check if the file exists
-            if not os.path.exists(file_path):
-                logging.warning(f"File does not exist: {file_path}")
-                failed_entries.append({
-                    'file_path': file_path,
-                    'slice_number': slice_number,
-                    'error': 'File not found'
-                })
-                # Add a placeholder
-                buffer.append(create_placeholder())
-                total_placeholders += 1
-                continue
-
-            # Load and preprocess the specific slice
-            processed_img = load_and_preprocess_dicom(file_path, slice_number, TARGET_SIZE)
-
-            if processed_img is not None:
-                buffer.append(processed_img)
-                processed_entries += 1
-            else:
-                # Processing failed, add a placeholder
-                buffer.append(create_placeholder())
-                failed_entries.append({
-                    'file_path': file_path,
-                    'slice_number': slice_number,
-                    'error': 'Processing failed'
-                })
-                total_placeholders += 1
-
-            # When buffer reaches BATCH_SIZE, write to HDF5 and clear buffer
-            if len(buffer) >= BATCH_SIZE:
-                # Determine current size
-                current_size = dset.shape[0]
-                # Resize the dataset to accommodate new data
-                dset.resize(current_size + len(buffer), axis=0)
-                # Write the data
-                dset[current_size:current_size + len(buffer), :, :] = np.array(buffer, dtype=np.uint8)
-                # Log the write operation
-                logging.info(f"Wrote {len(buffer)} images to H5. Total images now: {current_size + len(buffer)}")
-                # Update the total images counter
-                total_images_added += len(buffer)
-                # Clear the buffer
-                buffer = []
-
-        # Write any remaining data in buffer
-        if buffer:
-            current_size = dset.shape[0]
-            dset.resize(current_size + len(buffer), axis=0)
-            dset[current_size:current_size + len(buffer), :, :] = np.array(buffer, dtype=np.uint8)
-            logging.info(f"Wrote remaining {len(buffer)} images to H5. Total images now: {current_size + len(buffer)}")
-            total_images_added += len(buffer)
+            # Initialize buffer for batch processing
             buffer = []
 
-    print(f"Preprocessing complete. Images saved as {hdf5_output_path}.")
-    logging.info(f"Preprocessing complete. Processed entries: {processed_entries}, Images added: {total_images_added}, Placeholders added: {total_placeholders}")
+            # Initialize counters
+            processed_entries = 0
+            total_images_added = 0
+            total_placeholders = 0
 
-    # Save the list of failed entries
-    if failed_entries:
-        failed_df = pd.DataFrame(failed_entries)
-        failed_df.to_csv(fail_path, index=False)
-        print(f"{len(failed_entries)} metadata entries failed to process. Details saved in '{fail_path}'.")
-        logging.info(f"{len(failed_entries)} metadata entries failed to process. Details saved in '{fail_path}'.")
-    else:
-        print("All metadata entries processed successfully.")
-        logging.info("All metadata entries processed successfully.")
+            # Process each metadata entry
+            for idx, row in tqdm(metadata_df.iterrows(), total=metadata_df.shape[0], desc="Processing metadata entries"):
+                file_path = row['file_path']
+                slice_number = row['slice_number']
+
+                # Check if the file exists
+                if not os.path.exists(file_path):
+                    logging.warning(f"File does not exist: {file_path}")
+                    failed_entries.append({
+                        'file_path': file_path,
+                        'slice_number': slice_number,
+                        'error': 'File not found'
+                    })
+                    # Add a placeholder
+                    buffer.append(create_placeholder())
+                    total_placeholders += 1
+                    continue
+
+                # Load and preprocess the specific slice
+                processed_img = load_and_preprocess_dicom(file_path, slice_number, TARGET_SIZE)
+
+                if processed_img is not None:
+                    buffer.append(processed_img)
+                    processed_entries += 1
+                else:
+                    # Processing failed, add a placeholder
+                    buffer.append(create_placeholder())
+                    failed_entries.append({
+                        'file_path': file_path,
+                        'slice_number': slice_number,
+                        'error': 'Processing failed'
+                    })
+                    total_placeholders += 1
+
+                # When buffer reaches BATCH_SIZE, write to HDF5 and clear buffer
+                if len(buffer) >= BATCH_SIZE:
+                    # Determine current size
+                    current_size = dset.shape[0]
+                    # Resize the dataset to accommodate new data
+                    dset.resize(current_size + len(buffer), axis=0)
+                    # Write the data
+                    dset[current_size:current_size + len(buffer), :, :] = np.array(buffer, dtype=np.uint8)
+                    # Log the write operation
+                    logging.info(f"Wrote {len(buffer)} images to H5. Total images now: {current_size + len(buffer)}")
+                    # Update the total images counter
+                    total_images_added += len(buffer)
+                    # Clear the buffer
+                    buffer = []
+
+            # Write any remaining data in buffer
+            if buffer:
+                current_size = dset.shape[0]
+                dset.resize(current_size + len(buffer), axis=0)
+                dset[current_size:current_size + len(buffer), :, :] = np.array(buffer, dtype=np.uint8)
+                logging.info(f"Wrote remaining {len(buffer)} images to H5. Total images now: {current_size + len(buffer)}")
+                total_images_added += len(buffer)
+                buffer = []
+
+        print(f"Preprocessing complete. Images saved as {hdf5_output_path}.")
+        logging.info(f"Preprocessing complete. Processed entries: {processed_entries}, Images added: {total_images_added}, Placeholders added: {total_placeholders}")
+
+        # Save the list of failed entries
+        if failed_entries:
+            failed_df = pd.DataFrame(failed_entries)
+            failed_df.to_csv(fail_path, index=False)
+            print(f"{len(failed_entries)} metadata entries failed to process. Details saved in '{fail_path}'.")
+            logging.info(f"{len(failed_entries)} metadata entries failed to process. Details saved in '{fail_path}'.")
+        else:
+            print("All metadata entries processed successfully.")
+            logging.info("All metadata entries processed successfully.")
 
 # Execute the main function
 if __name__ == "__main__":

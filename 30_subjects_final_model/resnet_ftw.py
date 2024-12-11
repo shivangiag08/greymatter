@@ -1,5 +1,5 @@
 # Command to run:
-# python3 resnet_ftw.py --h5_file /Users/nimratkk/Documents/Projects/XAIforAD/processed_images_zip10.h5 --csv_file /Users/nimratkk/Documents/Projects/XAIforAD/zip3_metadata_from_dcm1.csv
+# python3 resnet_ftw.py --h5_file /Users/nimratkk/Documents/Projects/XAIforAD/processed_images_zip1.h5 --csv_file /Users/nimratkk/Documents/Projects/XAIforAD/30_patients_zip1.csv
 
 import os
 import h5py
@@ -34,8 +34,8 @@ train_patient_ids = selected_patient_ids[:30]  # First 30 for training
 test_patient_ids = selected_patient_ids[30:]   # Last 6 for testing
 
 # Default output paths for feature maps
-DEFAULT_TRAIN_FEATURES_PATH = "/Users/nimratkk/Documents/Projects/XAIforAD/train10_features.npy"
-DEFAULT_TEST_FEATURES_PATH = "/Users/nimratkk/Documents/Projects/XAIforAD/test10_features.npy"
+DEFAULT_TRAIN_FEATURES_PATH = "/Users/nimratkk/Documents/Projects/XAIforAD/train_features.npy"
+DEFAULT_TEST_FEATURES_PATH = "/Users/nimratkk/Documents/Projects/XAIforAD/test_features.npy"
 
 # ############################### Functions ########################################
 
@@ -149,112 +149,128 @@ def save_features(file_path, new_features):
 # ############################### Main Processing ##################################
 
 def main():
-    # Argument parser for command-line options
-    parser = argparse.ArgumentParser(description="Incrementally extract features from H5 and CSV files using ResNet50.")
-    parser.add_argument('--h5_file', type=str, required=True, help='Exact path to the H5 file.')
-    parser.add_argument('--csv_file', type=str, required=True, help='Exact path to the corresponding CSV file.')
-    parser.add_argument('--train_features', type=str, default=DEFAULT_TRAIN_FEATURES_PATH, help='Path to train_features.npy.')
-    parser.add_argument('--test_features', type=str, default=DEFAULT_TEST_FEATURES_PATH, help='Path to test_features.npy.')
-    
-    args = parser.parse_args()
-    
-    h5_path = args.h5_file
-    csv_path = args.csv_file
-    train_features_path = args.train_features
-    test_features_path = args.test_features
-    
-    # Check if H5 and CSV files exist
-    if not os.path.exists(h5_path):
-        print(f"H5 file does not exist: {h5_path}")
-        return
-    if not os.path.exists(csv_path):
-        print(f"CSV file does not exist: {csv_path}")
-        return
-    
-    # Determine the device to run on
-    if torch.backends.mps.is_available():
-        device = torch.device("mps")
-        print("MPS device detected and set as the computation device.")
-    else:
-        raise RuntimeError("MPS device not available. Please ensure you're running on a Mac with Apple Silicon and PyTorch is installed with MPS support.")
-    
-    # Load ResNet50 model
-    model = load_resnet50(device)
-    print("ResNet50 model loaded.")
-    
-    # Load metadata
-    metadata_df = pd.read_csv(csv_path)
-    print(f"Loaded metadata from {csv_path}, total entries: {len(metadata_df)}")
-    
-    # Open H5 file
-    with h5py.File(h5_path, 'r') as h5f:
-        images = h5f['images'][:]  # Assuming dataset name is 'images'
-        print(f"Loaded {images.shape[0]} images from {h5_path}")
-    
-    # Initialize lists to store new features
-    new_train_features = []
-    new_test_features = []
-    
-    # Iterate through each image and its metadata
-    for idx in tqdm(range(len(metadata_df)), desc="Processing images"):
-        meta = metadata_df.iloc[idx]
-        patient_id = meta['patient_id']
-        slice_number = meta['slice_number']
+    for n in range(1, 10):
+        # Argument parser for command-line options
+        parser = argparse.ArgumentParser(description="Incrementally extract features from H5 and CSV files using ResNet50.")
+        #parser.add_argument('--h5_file', type=str, required=True, help='Exact path to the H5 file.')
+        #parser.add_argument('--csv_file', type=str, required=True, help='Exact path to the corresponding CSV file.')
+        parser.add_argument('--train_features', type=str, default=DEFAULT_TRAIN_FEATURES_PATH, help='Path to train_features.npy.')
+        parser.add_argument('--test_features', type=str, default=DEFAULT_TEST_FEATURES_PATH, help='Path to test_features.npy.')
         
-        img = images[idx]
+        args = parser.parse_args()
         
-        # Preprocess image
-        try:
-            img_tensor = preprocess_image(img)
-        except Exception as e:
-            print(f"Preprocessing failed for {os.path.basename(h5_path)}, slice {slice_number}: {e}")
-            continue  # Skip this image
+        #h5_path = args.h5_file
+        #csv_path = args.csv_file
+        h5_path = f"/Users/nimratkk/Documents/Projects/XAIforAD/processed_images_zip{n}.h5"
+        csv_path = f"/Users/nimratkk/Documents/Projects/XAIforAD/30_patients_zip{n}.csv"
+        train_features_path = args.train_features
+        test_features_path = args.test_features
         
-        # Extract features
-        try:
-            features = extract_features(model, img_tensor, device)
-        except Exception as e:
-            print(f"Feature extraction failed for {os.path.basename(h5_path)}, slice {slice_number}: {e}")
-            continue  # Skip this image
+        # Check if H5 and CSV files exist
+        if not os.path.exists(h5_path):
+            print(f"H5 file does not exist: {h5_path}")
+            return
+        if not os.path.exists(csv_path):
+            print(f"CSV file does not exist: {csv_path}")
+            return
         
-        # Assign to train or test based on patient_id
-        if patient_id in train_patient_ids:
-            new_train_features.append(features)
-        elif patient_id in test_patient_ids:
-            new_test_features.append(features)
+        # Determine the device to run on
+        if torch.backends.mps.is_available():
+            device = torch.device("mps")
+            print("MPS device detected and set as the computation device.")
         else:
-            print(f"Patient ID {patient_id} not in train or test lists. Skipping.")
-            continue  # Skip if patient ID not recognized
-    
-    # Convert lists to numpy arrays
-    if new_train_features:
-        new_train_features = np.array(new_train_features, dtype=np.float32)
-        print(f"Extracted {new_train_features.shape[0]} train features.")
-    else:
-        new_train_features = np.empty((0, 2048), dtype=np.float32)
-        print("No new train features extracted.")
-    
-    if new_test_features:
-        new_test_features = np.array(new_test_features, dtype=np.float32)
-        print(f"Extracted {new_test_features.shape[0]} test features.")
-    else:
-        new_test_features = np.empty((0, 2048), dtype=np.float32)
-        print("No new test features extracted.")
-    
-    # Append new features to existing .npy files
-    if new_train_features.size > 0:
-        save_features(train_features_path, new_train_features)
-        print(f"Appended {new_train_features.shape[0]} features to {train_features_path}")
-    else:
-        print("No train features to append.")
-    
-    if new_test_features.size > 0:
-        save_features(test_features_path, new_test_features)
-        print(f"Appended {new_test_features.shape[0]} features to {test_features_path}")
-    else:
-        print("No test features to append.")
-    
-    print("Feature extraction and appending complete.")
+            raise RuntimeError("MPS device not available. Please ensure you're running on a Mac with Apple Silicon and PyTorch is installed with MPS support.")
+        
+        # Load ResNet50 model
+        model = load_resnet50(device)
+        print("ResNet50 model loaded.")
+        
+        # Load metadata
+        metadata_df = pd.read_csv(csv_path)
+        print(f"Loaded metadata from {csv_path}, total entries: {len(metadata_df)}")
+        
+        # Open H5 file
+        with h5py.File(h5_path, 'r') as h5f:
+            images = h5f['images'][:]  # Assuming dataset name is 'images'
+            print(f"Loaded {images.shape[0]} images from {h5_path}")
+        
+        # Verify consistency
+        num_metadata = len(metadata_df)
+        num_images = images.shape[0]
+        print(f"Number of metadata entries: {num_metadata}")
+        print(f"Number of images: {num_images}")
+        
+        if num_metadata != num_images:
+            print("WARNING: Number of metadata entries does not match number of images.")
+            min_count = min(num_metadata, num_images)
+            print(f"Processing only the first {min_count} entries to avoid IndexError.")
+        else:
+            min_count = num_metadata
+        
+        # Initialize lists to store new features
+        new_train_features = []
+        new_test_features = []
+        
+        # Iterate through each image and its metadata
+        for idx in tqdm(range(min_count), desc="Processing images"):
+            meta = metadata_df.iloc[idx]
+            patient_id = meta['patient_id']
+            slice_number = meta['slice_number']
+            
+            img = images[idx]
+            
+            # Preprocess image
+            try:
+                img_tensor = preprocess_image(img)
+            except Exception as e:
+                print(f"Preprocessing failed for {os.path.basename(h5_path)}, slice {slice_number}: {e}")
+                continue  # Skip this image
+            
+            # Extract features
+            try:
+                features = extract_features(model, img_tensor, device)
+            except Exception as e:
+                print(f"Feature extraction failed for {os.path.basename(h5_path)}, slice {slice_number}: {e}")
+                continue  # Skip this image
+            
+            # Assign to train or test based on patient_id
+            if patient_id in train_patient_ids:
+                new_train_features.append(features)
+            elif patient_id in test_patient_ids:
+                new_test_features.append(features)
+            else:
+                print(f"Patient ID {patient_id} not in train or test lists. Skipping.")
+                continue  # Skip if patient ID not recognized
+        
+        # Convert lists to numpy arrays
+        if new_train_features:
+            new_train_features = np.array(new_train_features, dtype=np.float32)
+            print(f"Extracted {new_train_features.shape[0]} train features.")
+        else:
+            new_train_features = np.empty((0, 2048), dtype=np.float32)
+            print("No new train features extracted.")
+        
+        if new_test_features:
+            new_test_features = np.array(new_test_features, dtype=np.float32)
+            print(f"Extracted {new_test_features.shape[0]} test features.")
+        else:
+            new_test_features = np.empty((0, 2048), dtype=np.float32)
+            print("No new test features extracted.")
+        
+        # Append new features to existing .npy files
+        if new_train_features.size > 0:
+            save_features(train_features_path, new_train_features)
+            print(f"Appended {new_train_features.shape[0]} features to {train_features_path}")
+        else:
+            print("No train features to append.")
+        
+        if new_test_features.size > 0:
+            save_features(test_features_path, new_test_features)
+            print(f"Appended {new_test_features.shape[0]} features to {test_features_path}")
+        else:
+            print("No test features to append.")
+        
+        print("Feature extraction and appending complete.")
 
 if __name__ == "__main__":
     main()

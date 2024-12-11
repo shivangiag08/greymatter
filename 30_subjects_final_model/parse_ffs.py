@@ -163,7 +163,7 @@ def process_folders(base_dir, selected_patient_ids):
 if __name__ == "__main__":
     # Process the directories and get the DataFrame
     # Base directory containing DICOM files
-    for n in range(1, 10):
+    for n in range(6, 10):
         base_dir = f"/Users/nimratkk/Documents/Projects/XAIforAD/MRI_{n}"
         output_path = f"/Users/nimratkk/Documents/Projects/XAIforAD/30_patients_zip{n}.csv"
         df = process_folders(base_dir, selected_patient_ids)
